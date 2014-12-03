@@ -9,7 +9,7 @@ Rectangle
     height: Screen.height/phi
 
     color: "#302727"
-    property int desiredGridSize: 10
+    property int desiredGridSize: 20
     property int totalGridLength : Math.pow(desiredGridSize,2)
     property int pSize: 0
     property int tileWidth: 0
