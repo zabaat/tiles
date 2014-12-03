@@ -1,3 +1,6 @@
 [submodule "lib/zLib"]
 	path = lib/zLib
-	url = https://bitbucket.org/zabaatinc/zabaat-library
+	url = https://zabaat@bitbucket.org/zabaatinc/zabaat-library.git
+[submodule "lib/pathfindingjs"]
+	path = lib/pathfindingjs
+	url = https://github.com/qiao/PathFinding.js.git
