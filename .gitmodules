@@ -1,0 +1,6 @@
+[submodule "desktop/lib/zLib"]
+	path = desktop/lib/zLib
+	url = https://zabaat@bitbucket.org/zabaatinc/zabaat-library.git
+[submodule "desktop/lib/pathfinderJS"]
+	path = desktop/lib/pathfinderJS
+	url = https://github.com/qiao/PathFinding.js.git
