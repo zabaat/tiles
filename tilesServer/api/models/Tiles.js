@@ -8,7 +8,7 @@
 module.exports = {
 
   attributes: {
-
+	tiles:{type:"string"}
   }
 };
 

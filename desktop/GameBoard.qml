@@ -368,6 +368,7 @@ Item{
 //                console.log("*****player info*****",(i+1),JSON.stringify(players.get(i)),"\n")
            }
 
+//           for (var a in t)
         }
     }
 
