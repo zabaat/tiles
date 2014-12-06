@@ -5,7 +5,7 @@ import "chance.js" as Chance
 
 Item{
     width: main.width
-    height: main.height
+    height: main.height+50
     property real phi: 1.618
     property alias board : board
     property real tileHeight : root.tileHeight
@@ -13,17 +13,22 @@ Item{
     focus:true
 
     // TO BE REPLACED
-    property int numPlayers:2
-    property var pName:([ "Brett","Chu"])
-    property var pColor: (["#006600","#660066"])
+    property int numPlayers:4
+    property var pName:([ "Brett","Chu","p3","derp"])
+    property var pColor: (["#006600","#660066","#DD66DD","#AF6610"])
     property var octoArray:([])
-    property var playerObj:({pName:"",pColor:"black",pId:0,tilesOwned:0,direction:"right",position:0,x:0,y:0})
+    property var playerObj:({pName:"",pColor:"black",pId:0,tilesOwned:0,direction:"stop",position:0,x:0,y:0})
     //
 
 
     GridView {
         id:board
-        anchors.fill: parent
+        anchors.top:parent.top
+        anchors.topMargin: 50
+        anchors.right:parent.right
+        anchors.left:parent.left
+        anchors.bottom: parent.bottom
+//        anchors.fill: parent
         cellWidth: tileWidth;
         cellHeight: tileHeight;
         model: root.appModel
@@ -35,16 +40,17 @@ Item{
     }
     Component {
         id: appDelegate
+
         Rectangle
         {
+            id:container
            width:0
            height:0
-//           color:"blue"
            color:"transparent"
-           border.color: "black"
-           border.width: 1
-           radius:1
-           property int owner: 0
+           border.color : "black"
+           border.width : 1
+           radius : 1
+           property int owner : 0
 
            Behavior on width        {NumberAnimation{duration:100}}
            Behavior on height       {NumberAnimation{duration:100}}
@@ -56,11 +62,12 @@ Item{
                id:tile
                color:fillColor
                visible: fillColor ==""? false:true
-               decayTimer.running:false
-               onColorChanged:
-               {
-                   decayTimer.running= true
-               }
+               opacity:.8
+//               decayTimer.running:false
+//               onColorChanged:
+//               {
+//                   decayTimer.running= true
+//               }
            }
            Image
            {
@@ -104,7 +111,7 @@ Item{
            MouseArea
            {
                anchors.fill: parent
-               onClicked: {grow.start(); tile.decayTimer.running=true; console.log(JSON.stringify(tile.color))}
+               onClicked: {grow.start(); tile.decayTimer.running=true;}
            }
            Timer
            {
@@ -122,37 +129,156 @@ Item{
     }
 
     ListView{
+        id:scoreView
         model:playersModel
         delegate:playersDelegate
-        anchors.verticalCenter: parent.verticalCenter
+        anchors.horizontalCenter: parent.horizontalCenter
         anchors.top:parent.top
-        width:120
+        width:main.width
+        orientation: ListView.Horizontal
+        spacing: 10
     }
 
 
     Component{
         id:playersDelegate
-
             Rectangle{
-                height:10
-                width:40
+                height:50
+                width:235
                 color:pColor
-
+        Row{
+            spacing:20
                 Text{
                     id:name
                     color:"white"
                     text:pName
-                    font.pointSize: 8
+                    font.pointSize: 16
                 }
                 Text{
-                    anchors.left:name.right
-                    anchors.leftMargin:5
-                    font.pointSize: 8
+                    font.pointSize: 16
                     color:"white"
                     text:tilesOwned
                 }
+            }
         }
     }
+
+    Row{
+        spacing:25
+        anchors.top:parent.top
+        anchors.right:parent.right
+        anchors.rightMargin: 100
+        Text
+        {
+            text:"Time"
+            color:"white"
+            font.pointSize: 14
+        }
+
+        Text
+        {
+            id:time
+            property int timer1: root.gameTimer
+            property int timer2: 0
+            color:"white"
+            text:timer1+":"+timer2+"0"
+            font.pointSize: 14
+            Behavior on font.pointSize{ NumberAnimation{duration:1000;}}
+        }
+
+        Timer
+        {
+            id:clockTimer
+            interval:100
+            running:true
+            repeat: true
+            onTriggered:
+            {
+                time.timer2-=1
+                if (time.timer2<=-1)
+                {
+                    time.timer2=9
+                    time.timer1-=1
+                    if(time.timer1<=5)
+                    {
+                        time.color="red";time.font.pointSize=40
+//                        appDelegate.color= "red"
+                    }
+                    if(time.timer1<=0) //game is over
+                    {
+                        gameOverRect.visible=true;
+                        clockTimer.stop();
+                        time.timer2=0;
+                        playerLoop.stop()
+
+                        var min = {}
+                        var max = {}
+                        min.val = 999999, max.val =-999999;
+                        for( var i =0; i < playersModel.count; i++) {
+                            if( playersModel.get(i).tilesOwned < min.val)
+                            {
+                                min.name = playersModel.get(i).pName;
+                                min.val = playersModel.get(i).tilesOwned;
+                            }
+                            if( playersModel.get(i).tilesOwned > max.val)
+                            {
+                                max.name = playersModel.get(i).pName;
+                                max.val = playersModel.get(i).tilesOwned;
+                                max.color = playersModel.get(i).pColor
+                            }
+                        }
+                        gameOverRect.winnerName = max.name;
+                        gameOverRect.winnerColor =max.color;
+                    }
+                }
+            }
+        }
+    }
+
+    Rectangle
+    {
+        id:gameOverRect
+        anchors.fill:parent
+        visible:false
+        property string winnerColor:"#AA4217"
+        color:winnerColor
+        anchors.topMargin:50
+        anchors.top:parent.top
+        property string winnerName:""
+
+        Text
+        {
+            id:zbbda
+            anchors.centerIn: parent
+            text: "GAME OVER"
+            font.pointSize: 72
+        }
+
+        Text
+        {
+            text:"the winner was "+gameOverRect.winnerName
+            font.pointSize: 24
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top:parent.top
+            anchors.topMargin: 150
+        }
+
+        Text
+        {
+            text:"click to continue"
+            font.pointSize: 16
+            anchors.top:zbbda.bottom
+            anchors.topMargin: 30
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+
+        MouseArea
+        {
+            anchors.fill:parent
+            onClicked: {gameOver.visible!=gameOver.visible;restartGame()}
+        }
+    }
+
 
 
 
@@ -201,10 +327,12 @@ Item{
         id:player1
         x:50
         y:50
+        border.color: "white"
+        border.width: 2
         color:"#006600"
         height:pSize
         width:pSize
-        property int position:0
+        property int position:1
         property int pId:0
         onPositionChanged:
         {
@@ -225,14 +353,94 @@ Item{
         id:player2
         x:0
         y:0
+        border.color: "white"
+        border.width: 2
         color:"#660066"
         height:pSize
         width:pSize
+        property int tilesOwned:0
         property int position:0
         property int pId:1
         onPositionChanged:
         {
 //            appModel.get(position).fillColor =   "#660066"
+            //TODO SERVER
+            playerLogic(this)
+        }
+
+        ParticleSystem {
+            width:parent.width+50
+            height:parent.width+50
+            anchors.centerIn: parent
+            ImageParticle {
+                groups: ["stars"]
+                anchors.fill: parent
+                source: "qrc:///particleresources/star.png"
+            }
+            Emitter {
+                id:emitter
+                group: "stars"
+                emitRate: player2.tilesOwned*2
+                lifeSpan: 2400
+                size: 10
+                sizeVariation: 5
+                anchors.fill: parent
+//                Behavior on emitRate {NumberAnimation{duration:500}}
+            }
+                    Turbulence {
+                        anchors.fill: parent
+                        strength:4
+                    }
+        }
+        Component.onCompleted:
+        {
+            playerInit(this)
+            player2.tilesOwned=Qt.binding(function(){return playersModel.get(1).tilesOwned})
+        }
+        Behavior on x {NumberAnimation{duration:playerLoop.interval}}
+        Behavior on y {NumberAnimation{duration:playerLoop.interval}}
+    }
+
+    Rectangle
+    {
+        id:player3
+        x:50
+        y:50
+        border.color: "white"
+        border.width: 2
+        color:"#FF66FF"
+        height:pSize
+        width:pSize
+        property int position:2
+        property int pId:2
+        onPositionChanged:
+        {
+            //TODO SERVER
+            playerLogic(this)
+        }
+        Component.onCompleted:
+        {
+            playerInit(this)
+        }
+
+        Behavior on x {NumberAnimation{duration:playerLoop.interval}}
+        Behavior on y {NumberAnimation{duration:playerLoop.interval}}
+    }
+
+    Rectangle
+    {
+        id:player4
+        x:50
+        y:50
+        border.color: "white"
+        border.width: 2
+        color:"#AF6610"
+        height:pSize
+        width:pSize
+        property int position:2
+        property int pId:3
+        onPositionChanged:
+        {
             //TODO SERVER
             playerLogic(this)
         }
@@ -247,22 +455,40 @@ Item{
 
         Keys.onPressed: {
             switch(event.key) {
-            case Qt.Key_Left: {playersModel.get(0).direction="left";console.log("left")};
+            case Qt.Key_Left: {playersModel.get(0).direction="left";};
                 break;
-            case Qt.Key_Right: {playersModel.get(0).direction="right";console.log("right")}
+            case Qt.Key_Right: {playersModel.get(0).direction="right";}
                 break;
-            case Qt.Key_Up: {playersModel.get(0).direction="up";console.log("up")}
+            case Qt.Key_Up: {playersModel.get(0).direction="up";}
                 break;
-            case Qt.Key_Down: {playersModel.get(0).direction="down";console.log("down")}
+            case Qt.Key_Down: {playersModel.get(0).direction="down";}
                 break;
             // P2
-            case Qt.Key_A: {playersModel.get(1).direction="left";console.log("left")};
+            case Qt.Key_A: {playersModel.get(1).direction="left";};
                 break;
-            case Qt.Key_D: {playersModel.get(1).direction="right";console.log("right")}
+            case Qt.Key_D: {playersModel.get(1).direction="right";}
                 break;
-            case Qt.Key_W: {playersModel.get(1).direction="up";console.log("up")}
+            case Qt.Key_W: {playersModel.get(1).direction="up";}
                 break;
-            case Qt.Key_S: {playersModel.get(1).direction="down";console.log("down")}
+            case Qt.Key_S: {playersModel.get(1).direction="down";}
+                break;
+            //P3
+            case Qt.Key_G: {playersModel.get(2).direction="left";};
+                break;
+            case Qt.Key_J: {playersModel.get(2).direction="right";}
+                break;
+            case Qt.Key_Y: {playersModel.get(2).direction="up";}
+                break;
+            case Qt.Key_H: {playersModel.get(2).direction="down";}
+                break;
+            //P4
+            case Qt.Key_7: {playersModel.get(3).direction="left";}
+                break;
+            case Qt.Key_0: {playersModel.get(3).direction="right";}
+                break;
+            case Qt.Key_8: {playersModel.get(3).direction="up";}
+                break;
+            case Qt.Key_9: {playersModel.get(3).direction="down";}
                 break;
             }
         }
@@ -277,20 +503,16 @@ Item{
             if (playerObj.direction == "stop") return //no reason to evaluate anything if you aren't moving
             var returnInt = 0;
             var currentPos = playerObj.position
-
             var newMovement = checkBounds(playerObj)
             if (newMovement == 0){playerObj.direction="stop"} //stop if you can't move any more
+            else playerObj.position += newMovement
 
-//            console.log("old position ",playerObj.position)
-            playerObj.position += newMovement
-//            console.log("new position",playerObj.position)
+            // tilesOwned changer - changes the count for the tiles that you own
+            var newTileObj = appModel.get(playerObj.position)
+            if (newTileObj.owner > -1){playersModel.get(newTileObj.owner).tilesOwned--}
+            appModel.get(playerObj.position).owner = playerObj.pId
+            playersModel.get(playerObj.pId).tilesOwned++
 
-
-
-//            else console.log("y ",typeof y)
-
-//            console.log("player pos moved to x:",playerObj.x,"y:",playerObj.y)
-//            return returnInt;
         }
     function checkBounds(playerObj)
     //checks if your player is sitting at the edge of the map and if his next movement will take him off.
@@ -299,7 +521,6 @@ Item{
         var storedMovement = 0
         var limitCheckerObj,i
         var coordinates =gridConvert(playerObj.position)
-
         var pertinentCoordinate //used for comparing in the switch statement
 //        console.log("COORDINATES WORK?",xCoordinate,yCoordinate)
         switch(playerObj.direction)
@@ -361,27 +582,27 @@ Item{
         onTriggered:
         {
             var xy,playerPos
-//            playerPos = players.get(0).position = player1.position
             for (var i=0 ;i <numPlayers;i++)
             {
                 playerMove(playersModel.get(i))
-//                console.log("*****player info*****",(i+1),JSON.stringify(players.get(i)),"\n")
            }
-
-//           for (var a in t)
         }
     }
 
     function init()
     {
         octoMapper();
+        var xy = {}
         for (var i =0; i < numPlayers; i++)
         {
             playersModel.append(playerObj) //TODO get this from server perhaps? or init of the thing
+            playersModel.get(i).position = positionMapper(i);
             playersModel.get(i).pName = pName[i];
             playersModel.get(i).pColor = pColor[i];
-            playersModel.get(i).position = positionMapper(i);
             playersModel.get(i).pId = i
+            xy = gridConvert(playersModel.get(i).position)
+            playersModel.get(i).x = xy.x
+            playersModel.get(i).y = xy.y
             console.log("player",JSON.stringify(playersModel.get(i)))
         }
 
@@ -398,9 +619,9 @@ Item{
 
             case 4:
                 if (i==0)return 0
-                else if (i==1)return (totalGridLength * 1/4)-1
-                else if (i==2)return (totalGridLength * 3/4)-1
-                else if (i==3)return (totalGridLength-1)
+                else if (i==1)return Math.floor(desiredGridSize -1)
+                else if (i==2)return Math.floor(totalGridLength-desiredGridSize)
+                else if (i==3)return Math.floor(totalGridLength-1)
                 break;
             }
         }
@@ -424,6 +645,9 @@ Item{
             octoArray.push(dsg)
             octoArray.push(dsg+1)
         }
+
+
+
         console.log("board init complete")
     }
 

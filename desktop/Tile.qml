@@ -5,8 +5,10 @@ import QtQuick.Particles 2.0
 Rectangle {
     anchors.fill: parent
     color: "black"
-    property alias decayTimer:decay
-    Behavior on color {ColorAnimation{duration:1000}}
+
+//    property alias decayTimer:decay
+//    Behavior on color {ColorAnimation{duration:1000}}
+    Behavior
 
     ParticleSystem {
         anchors.fill: parent
@@ -18,13 +20,20 @@ Rectangle {
         Emitter {
             id:emitter
             group: "stars"
-            emitRate: 50
+            emitRate: 5
             lifeSpan: 2400
             size: 8
             sizeVariation: 4
             anchors.fill: parent
             Behavior on emitRate {NumberAnimation{duration:500}}
         }
+
+//        Turbulence {
+//            anchors.fill: parent
+//            strength:4
+//        }
+
+
 
         // ![0]
 //        ImageParticle {
@@ -45,26 +54,23 @@ Rectangle {
 //                velocity: AngleDirection {angleVariation: 180; magnitude: 60}
 //            }
 
-        Turbulence {
-            anchors.fill: parent
-            strength:4
-        }
-        Timer
-        {
-            id:decay
-            running:false
-            repeat:false
-            interval:1000
-            onTriggered:
-            {
-                emitter.emitRate -= emitter.emitRate/4
-                interval= interval/1.5
-            }
-            onRunningChanged: {
-                if (!running){emitter.visible=false;emitter.emitRate=50}
-                else{emitter.visible=true;}
-            }
-        }
+
+//        Timer
+//        {
+//            id:decay
+//            running:false
+//            repeat:false
+//            interval:1000
+//            onTriggered:
+//            {
+//                emitter.emitRate -= emitter.emitRate/4
+//                interval= interval/1.5
+//            }
+//            onRunningChanged: {
+//                if (!running){emitter.visible=false;emitter.emitRate=10}
+//                else{emitter.visible=true;}
+//            }
+//        }
 
     }
 }
