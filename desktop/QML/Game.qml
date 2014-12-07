@@ -1,16 +1,13 @@
 import QtQuick 2.3
 import QtQuick.Window 2.1
 import QtQuick.Particles 2.0
-import "./chance.js" as Chance
+import "../lib/chance.js" as Chance
 
 Rectangle
 {
     id:root
     width: Screen.width/phi
     height: (Screen.height/phi)+headerOffset
-
-
-
 
     // INIT OPTIONS
     property int desiredGridSize: 20
@@ -212,7 +209,7 @@ Rectangle
         for (j = 0; j<desiredGridSize;j++){gameLimits.yUpLimits.push(j)}
         for (j = 0; j<gameLimits.xRightLimits.length;j++){gameLimits.xLeftLimits.push(gameLimits.xRightLimits[j]-(desiredGridSize-1))}
 */
-            console.log(JSON.stringify(gameArray))
+//            console.log(JSON.stringify(gameArray))
 //            console.log(JSON.stringify(gameLimits,null,1))
 //            console.log(JSON.stringify(yLimit,null,1))
             console.log("init complete")

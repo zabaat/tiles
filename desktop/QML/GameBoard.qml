@@ -1,7 +1,7 @@
 import QtQuick 2.3
 import QtQuick.Window 2.0
 import QtQuick.Particles 2.0
-import "chance.js" as Chance
+import "../lib/chance.js" as Chance
 
 Item{
     width: main.width
@@ -20,7 +20,6 @@ Item{
     property var playerObj:({pName:"",pColor:"black",pId:0,tilesOwned:0,direction:"stop",position:0,x:0,y:0})
     //
 
-
     GridView {
         id:board
         anchors.top:parent.top
@@ -38,24 +37,25 @@ Item{
                 NumberAnimation { properties: "x,y"; from: random(1000,1500); duration: 300 }
             }
     }
+
     Component {
         id: appDelegate
-
         Rectangle
         {
             id:container
-           width:0
-           height:0
-           color:"transparent"
-           border.color : "black"
-           border.width : 1
-           radius : 1
-           property int owner : 0
+            width:0
+            height:0
+            color:"transparent"
+            border.color : "black"
+            border.width : 1
+            radius : 1
+            property int owner : 0
+            onOwnerChanged:console.log("own",tile.particleGroup)
 
-           Behavior on width        {NumberAnimation{duration:100}}
-           Behavior on height       {NumberAnimation{duration:100}}
-           Behavior on color          {ColorAnimation {duration:1000}}
-           Component.onCompleted: {width=tileWidth;height=tileHeight;}
+            Behavior on width        {NumberAnimation{duration:100}}
+            Behavior on height       {NumberAnimation{duration:100}}
+            Behavior on color          {ColorAnimation {duration:1000}}
+            Component.onCompleted: {width=tileWidth;height=tileHeight;}
 
            Tile
            {
@@ -63,27 +63,26 @@ Item{
                color:fillColor
                visible: fillColor ==""? false:true
                opacity:.8
-//               decayTimer.running:false
-//               onColorChanged:
-//               {
-//                   decayTimer.running= true
-//               }
+               particleGroup:index
+               decayTimer.running:false
+               onColorChanged:
+               {
+                   decayTimer.running= true
+               }
            }
-           Image
-           {
+           Image {
                 id:imgFish
-                  source:"./assets/fish.png"
+                  source:"../assets/fish.png"
                   anchors.centerIn: parent
                   visible: hasFish
            }
-           Image
-           {
+           Image {
                 id:imgOcto
-                source:"./assets/octo.png"
+                source:"../assets/octo.png"
                 anchors.centerIn: parent
                 visible: hasOcto
            }
-            SequentialAnimation{
+            SequentialAnimation {
                 id:pAnim
                 running:octoEffect
                 property int durationTime:600
@@ -102,19 +101,17 @@ Item{
                     duration:pAnim.durationTime*1/3
                 }
            }
-            Timer{
+            Timer {
                 running:octoEffect
                 interval:pAnim.durationTime
                 onTriggered: octoEffect = false
             }
 
-           MouseArea
-           {
+           MouseArea {
                anchors.fill: parent
                onClicked: {grow.start(); tile.decayTimer.running=true;}
            }
-           Timer
-           {
+           Timer {
                id:grow
                running:false
                repeat: true
@@ -128,7 +125,7 @@ Item{
         }
     }
 
-    ListView{
+    ListView {
         id:scoreView
         model:playersModel
         delegate:playersDelegate
@@ -137,37 +134,39 @@ Item{
         width:main.width
         orientation: ListView.Horizontal
         spacing: 10
-    }
 
-
-    Component{
-        id:playersDelegate
-            Rectangle{
-                height:50
-                width:235
-                color:pColor
-        Row{
-            spacing:20
-                Text{
-                    id:name
-                    color:"white"
-                    text:pName
-                    font.pointSize: 16
-                }
-                Text{
-                    font.pointSize: 16
-                    color:"white"
-                    text:tilesOwned
+        Component{
+            id:playersDelegate
+                Rectangle{
+                    height:50
+                    width:235
+                    color:pColor
+            Row{
+                spacing:20
+                    Text{
+                        id:name
+                        color:"white"
+                        text:pName
+                        font.pointSize: 16
+                    }
+                    Text{
+                        font.pointSize: 16
+                        color:"white"
+                        text:tilesOwned
+                    }
                 }
             }
         }
     }
 
+
+
+    Rectangle { //timer
+    anchors.top:parent.top
+    anchors.right:parent.right
+    anchors.rightMargin: 150
     Row{
         spacing:25
-        anchors.top:parent.top
-        anchors.right:parent.right
-        anchors.rightMargin: 100
         Text
         {
             text:"Time"
@@ -234,12 +233,13 @@ Item{
             }
         }
     }
+}
 
-    Rectangle
-    {
+    Rectangle {
         id:gameOverRect
         anchors.fill:parent
         visible:false
+        opacity:.6
         property string winnerColor:"#AA4217"
         color:winnerColor
         anchors.topMargin:50
@@ -288,18 +288,11 @@ Item{
         if (xy.x) this.x = xy.x
         if (xy.y) this.y = xy.y
         var clr = this.color.toString()
-//        console.log("THIS COLOR",this.color,appModel.get(this.position).fillColor)
-//function fullColorString(clr, a) { return "#" + ((Math.ceil(a*255) + 256).toString(16).substr(1, 2) + clr.toString().substr(1, 6)).toUpperCase() }
+
         appModel.get(this.position).fillColor =   clr
 
-        if (hasOcto == this.position) {
-            octoGet(this,clr)
-
-        }
-        if (hasFish == this.position) {
-
-
-        }
+        if (hasOcto == this.position) {octoGet(this,clr)}
+        if (hasFish == this.position) {        }
 
     }
 
@@ -312,106 +305,43 @@ Item{
     }
 
     function octoGet(playerObj,clr){
-//        console.log(JSON.stringify(octoArray),playerObj.position)
         appModel.get(playerObj.position).octoEffect = true
         for (var i = 0; i < octoArray.length;i++){
                if (appModel.get(playerObj.position+octoArray[i])){
                    appModel.get(playerObj.position+octoArray[i]).fillColor = clr
                }
         }
-
     }
 
-    Rectangle
+    Player
     {
         id:player1
-        x:50
-        y:50
-        border.color: "white"
-        border.width: 2
-        color:"#006600"
-        height:pSize
-        width:pSize
-        property int position:1
-        property int pId:0
         onPositionChanged:
         {
             //TODO SERVER
             playerLogic(this)
+            console.log("player position changed")
         }
-        Component.onCompleted:
-        {
-            playerInit(this)
-        }
-
-        Behavior on x {NumberAnimation{duration:playerLoop.interval}}
-        Behavior on y {NumberAnimation{duration:playerLoop.interval}}
+        Component.onCompleted: {playerInit(this)}
     }
 
-    Rectangle
+    Player
     {
         id:player2
-        x:0
-        y:0
-        border.color: "white"
-        border.width: 2
-        color:"#660066"
-        height:pSize
-        width:pSize
-        property int tilesOwned:0
-        property int position:0
         property int pId:1
-        onPositionChanged:
-        {
-//            appModel.get(position).fillColor =   "#660066"
-            //TODO SERVER
+        onPositionChanged: {//TODO SERVER
             playerLogic(this)
-        }
-
-        ParticleSystem {
-            width:parent.width+50
-            height:parent.width+50
-            anchors.centerIn: parent
-            ImageParticle {
-                groups: ["stars"]
-                anchors.fill: parent
-                source: "qrc:///particleresources/star.png"
-            }
-            Emitter {
-                id:emitter
-                group: "stars"
-                emitRate: player2.tilesOwned*2
-                lifeSpan: 2400
-                size: 10
-                sizeVariation: 5
-                anchors.fill: parent
-//                Behavior on emitRate {NumberAnimation{duration:500}}
-            }
-                    Turbulence {
-                        anchors.fill: parent
-                        strength:4
-                    }
         }
         Component.onCompleted:
         {
             playerInit(this)
             player2.tilesOwned=Qt.binding(function(){return playersModel.get(1).tilesOwned})
         }
-        Behavior on x {NumberAnimation{duration:playerLoop.interval}}
-        Behavior on y {NumberAnimation{duration:playerLoop.interval}}
     }
 
-    Rectangle
+    Player
     {
         id:player3
-        x:50
-        y:50
-        border.color: "white"
-        border.width: 2
-        color:"#FF66FF"
-        height:pSize
-        width:pSize
-        property int position:2
         property int pId:2
         onPositionChanged:
         {
@@ -422,22 +352,11 @@ Item{
         {
             playerInit(this)
         }
-
-        Behavior on x {NumberAnimation{duration:playerLoop.interval}}
-        Behavior on y {NumberAnimation{duration:playerLoop.interval}}
     }
 
-    Rectangle
+    Player
     {
         id:player4
-        x:50
-        y:50
-        border.color: "white"
-        border.width: 2
-        color:"#AF6610"
-        height:pSize
-        width:pSize
-        property int position:2
         property int pId:3
         onPositionChanged:
         {
@@ -448,12 +367,9 @@ Item{
         {
             playerInit(this)
         }
-
-        Behavior on x {NumberAnimation{duration:playerLoop.interval}}
-        Behavior on y {NumberAnimation{duration:playerLoop.interval}}
     }
 
-        Keys.onPressed: {
+        Keys.onPressed: { //player movement keys
             switch(event.key) {
             case Qt.Key_Left: {playersModel.get(0).direction="left";};
                 break;
@@ -512,8 +428,8 @@ Item{
             if (newTileObj.owner > -1){playersModel.get(newTileObj.owner).tilesOwned--}
             appModel.get(playerObj.position).owner = playerObj.pId
             playersModel.get(playerObj.pId).tilesOwned++
-
         }
+
     function checkBounds(playerObj)
     //checks if your player is sitting at the edge of the map and if his next movement will take him off.
     //returns the amount he should move (0 if he is at edge and next move would send him to his fate)
@@ -576,7 +492,7 @@ Item{
     Timer
     {
         id:playerLoop
-        interval:100
+        interval:90
         repeat:true
         running:true
         onTriggered:
@@ -625,6 +541,7 @@ Item{
                 break;
             }
         }
+
         function octoMapper(){
 //            octoArray = new Array(0)
             var dsg=desiredGridSize

@@ -5,29 +5,33 @@ import QtQuick.Particles 2.0
 Rectangle {
     anchors.fill: parent
     color: "black"
-
-//    property alias decayTimer:decay
-//    Behavior on color {ColorAnimation{duration:1000}}
-    Behavior
+    property string particleGroup:""
+    property alias decayTimer:decay
+    Behavior on color {ColorAnimation{duration:1000}}
 
     ParticleSystem {
-        anchors.fill: parent
+        width:parent.width+15
+        height:parent.width+15
+        anchors.centerIn: parent
         ImageParticle {
-            groups: ["stars"]
+//            groups: ["stars"]
+            groups:particleGroup
             anchors.fill: parent
             source: "qrc:///particleresources/star.png"
+            Component.onCompleted: console.log(groups)
         }
         Emitter {
             id:emitter
-            group: "stars"
-            emitRate: 5
+//            group: "stars"
+            group:particleGroup
+            emitRate: 50
             lifeSpan: 2400
             size: 8
             sizeVariation: 4
             anchors.fill: parent
             Behavior on emitRate {NumberAnimation{duration:500}}
         }
-
+    }
 //        Turbulence {
 //            anchors.fill: parent
 //            strength:4
@@ -55,22 +59,21 @@ Rectangle {
 //            }
 
 
-//        Timer
-//        {
-//            id:decay
-//            running:false
-//            repeat:false
-//            interval:1000
-//            onTriggered:
-//            {
-//                emitter.emitRate -= emitter.emitRate/4
+        Timer
+        {
+            id:decay
+            running:true
+            repeat:false
+            interval:100
+            onTriggered: {
+                emitter.emitRate = 0
 //                interval= interval/1.5
-//            }
-//            onRunningChanged: {
-//                if (!running){emitter.visible=false;emitter.emitRate=10}
+            }
+            onRunningChanged: {
+//                if (!running){emitter.visible=false;emitter.emitRate=20}
 //                else{emitter.visible=true;}
-//            }
-//        }
+            }
+        }
 
-    }
+
 }

@@ -1,7 +1,17 @@
 import QtQuick 2.3
 import QtQuick.Window 2.0
-import "chance.js" as Chance
-import "./lib/zLib/SocketIo"
+import "../lib/chance.js" as Chance
+import "../lib/zLib/SocketIo"
+
+
+/*wishlist:
+particles interaction
+rotation of tiles when crossing them
+grid overlay for non tile objects
+a*
+
+
+  */
 
 
 Rectangle
@@ -15,7 +25,6 @@ Rectangle
 //    height: (Screen.height/phi)+headerOffset
     function random(min,max)     {     return Math.random() * (max - min) - min }
     function get_random_color() {     var r = Math.random().toPrecision(1);         var g = Math.random().toPrecision(1);         var b = Math.random().toPrecision(1);         var str = Qt.rgba(r,g,b,1);         str = str.toString();         return str   }
-
 
     Loader
     {
@@ -80,5 +89,20 @@ Rectangle
                     console.log(o,obj[o])
                 }
             }
+
+            function getNewObject(name,parent,qmlArgs) //qml args must be object that contains string formatted "property":"value"
+            {
+                var cmp =  Qt.createComponent(name)
+                if(cmp.status == Component.Ready)
+                    if (qmlArgs !=null) {return cmp.createObject(parent,qmlArgs)}
+                    else
+                        return cmp.createObject(parent)
+                else
+                {
+                    console.log("getNewObject error: ",name,cmp.errorString())
+                    return null
+                }
+            }
+
  }
 
