@@ -8,6 +8,7 @@ import "../lib/zLib/SocketIo"
 particles interaction
 rotation of tiles when crossing them
 grid overlay for non tile objects
+Camera for level detection - drawing from picture analysis
 a*
 
 
@@ -103,6 +104,7 @@ Rectangle
                     return null
                 }
             }
+
 
  }
 

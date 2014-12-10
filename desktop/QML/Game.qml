@@ -8,12 +8,14 @@ Rectangle
     id:root
     width: Screen.width/phi
     height: (Screen.height/phi)+headerOffset
-
     // INIT OPTIONS
     property int desiredGridSize: 20
     property int gameTimer : 100
     color: "#006994"
-
+    property int numPlayers:4
+    property var pName:([ "Brett","Chu","p3","derp"])
+    property var pColor: (["#006600","#660066","#DD66DD","#AF6610"])
+    property var playerObj:({pName:"",pColor:"red",pId:0,tilesOwned:0,direction:"stop",position:0,x:0,y:0,speed:gameTimer})
 
     property int headerOffset:main.headerOffset
 
@@ -27,7 +29,6 @@ Rectangle
     property alias appModel : appModel
 //     property var tileObj : ({owner:{name:"",color:"black"},hasFish:false,stability:0,occupied:[0],fillColor:""})
 
-
     property var gameArray:[]
     property var gameLimits:({})
 
@@ -35,7 +36,11 @@ Rectangle
     property var yPos:[]
     property int hasFish: -1
     property int hasOcto: -1
-    property var tileObj : ({owner:-1,hasFish:false,hasOcto:false,octoEffect:false,stability:0,occupied:[0],fillColor:""})
+    property var tileObj : ({owner:-1,hasFish:false,hasOcto:false,octoEffect:false,stability:0,occupied:[0],fillColor:"transparent"})
+
+    property var functions:({
+                                gridConvert: function(linePos){return root.gameArray[linePos] }
+                            })
 /* SHADER EFFECT WATER
     Image {
         id: sourceImg
@@ -78,12 +83,18 @@ Rectangle
         id:playersModel
     }
 
+
+//    Loader
+//    {
+//        id:gameboardLoader
+//        focus:true
+//        source:"GameBoard.qml"
+//    }
     GameBoard
     {
        id:gameBoard
        focus:true
     }
-
 
     ///SERVER
 //    Timer
@@ -129,9 +140,6 @@ Rectangle
        appModel.get(hasOcto).hasOcto=true
     }
 
-
-
-
     Keys.onPressed: {
        switch(event.key) {
            case Qt.Key_Space: console.log(gameBoard.board.currentIndex == gameBoard.hasFish);
@@ -139,31 +147,17 @@ Rectangle
       }
     }
 
+    function gridConvert(linePos)
+    {
+        return root.gameArray[linePos]
+    }
+
+
     function doInit()
     {
         tileWidth = (main.width) / desiredGridSize
         tileHeight = (main.height-headerOffset) / desiredGridSize
         pSize = tileHeight /2
-
-//        console.log("tileobj",JSON.stringify(tileObj))
-        for (var i = 0; i < totalGridLength; i++)
-            appModel.append(tileObj)
-
-        var i,j,x,y
-        var modCheck = -1;
-                gameArray = new Array(0);
-
-        for (i=0;i<desiredGridSize;i++)
-        {
-//            console.log("pushing to x ",(i*tileWidth)+(tileWidth/2))-(pSize/2))
-            xPos.push({x:Math.floor((i*tileWidth)+(tileWidth/2)-(pSize/2)),xCo:i})   //store as object the desired position of the center of the grid, offsetting for player size, and the coordinate
-            yPos.push({y:Math.floor((i*tileHeight)+(tileHeight/2)-(pSize/2))+headerOffset,yCo:i})
-        }
-        console.log("POSs",JSON.stringify(xPos),JSON.stringify(yPos))
-        for(i=0;i<totalGridLength;i++)
-        {
-            gameArray[i]={x:0,xCo:0,y:0,yCo:0}
-        }
 
         function gridSet(start,totalGridLength,counter)
         //recursive function that constructs the grid array with preloaded position data and x/y cordinate set
@@ -187,18 +181,89 @@ Rectangle
     //            console.log("\n")
                 gridSet(start+=desiredGridSize,totalGridLength,counter)
             }
-
         }
-        gridSet(0,totalGridLength);
 
+        function playerInit(players)
+        {
+            var xy = {}
+            for (var i =0; i < numPlayers; i++)
+            {
+                playersModel.append(playerObj) //TODO get this from server perhaps? or init of the thing
+                playersModel.get(i).position = positionMapper(i);
+                playersModel.get(i).pName = pName[i];
+                playersModel.get(i).pColor = pColor[i];
+                playersModel.get(i).pId = i
+                xy = gridConvert(playersModel.get(i).position)
+                playersModel.get(i).x = xy.x
+                playersModel.get(i).y = xy.y
+                console.log("player",JSON.stringify(playersModel.get(i)))
+
+                var newPlayer = getNewObject("Player.qml",gameBoard.pContainer,{
+                                                 "id":"player"+i,
+                                                 "pId":i,
+                                                 "position":playersModel.get(i).position,
+                                                 "playerModelRef":playersModel.get(i),
+                                                 "height":25,
+                                                 "width":25,
+                                                 "color":playersModel.get(i).color
+                                             })
+
+//                gameBoard.pContainer.children[i].rootRef = root
+                console.log("newPlayer",newPlayer)
+//            newCloud.rowWidth= rowWidth
+//                newCloud.screenWidth = Qt.binding(function(){return rootObject.width})
+            }
+
+            function positionMapper(i)
+            {
+                switch(numPlayers)
+                {
+                case 2:
+                    if (i===0)return 0
+                    else if (i===1)return totalGridLength-1
+                    break;
+
+                case 4:
+                    if (i===0)return 0
+                    else if (i===1)return Math.floor(desiredGridSize -1)
+                    else if (i===2)return Math.floor(totalGridLength-desiredGridSize)
+                    else if (i===3)return Math.floor(totalGridLength-1)
+                    break;
+                }
+            }
+        }
+
+//        console.log("tileobj",JSON.stringify(tileObj))
+        for (var i = 0; i < totalGridLength; i++)
+            appModel.append(tileObj)
+
+        var i,j,x,y
+        var modCheck = -1;
+                gameArray = new Array(0);
+
+        for (i=0;i<desiredGridSize;i++)
+        {
+//            console.log("pushing to x ",(i*tileWidth)+(tileWidth/2))-(pSize/2))
+            xPos.push({x:Math.floor((i*tileWidth)+(tileWidth/2)-(pSize/2)),xCo:i})   //store as object the desired position of the center of the grid, offsetting for player size, and the coordinate
+            yPos.push({y:Math.floor((i*tileHeight)+(tileHeight/2)-(pSize/2))+headerOffset,yCo:i})
+        }
+        console.log("POSs",JSON.stringify(xPos),JSON.stringify(yPos))
+        for(i=0;i<totalGridLength;i++)
+        {
+            gameArray[i]={x:0,xCo:0,y:0,yCo:0}
+        }
+
+        gridSet(0,totalGridLength);
+        console.log(JSON.stringify(gameArray))
 //set game movement limits these are the actual indices of the grid not the outside of the grid.
         gameLimits.up = 0
         gameLimits.left = 0
         gameLimits.right = desiredGridSize-1
         gameLimits.down = desiredGridSize-1
 
+        playerInit();
 
-// old code for calculating movement limits
+        // old code for calculating movement limits
 /*
         gameLimits.xRightLimits=new Array(0)
         gameLimits.xLeftLimits=new Array(0)
@@ -209,10 +274,11 @@ Rectangle
         for (j = 0; j<desiredGridSize;j++){gameLimits.yUpLimits.push(j)}
         for (j = 0; j<gameLimits.xRightLimits.length;j++){gameLimits.xLeftLimits.push(gameLimits.xRightLimits[j]-(desiredGridSize-1))}
 */
-//            console.log(JSON.stringify(gameArray))
+
 //            console.log(JSON.stringify(gameLimits,null,1))
 //            console.log(JSON.stringify(yLimit,null,1))
-            console.log("init complete")
+        console.log("players",JSON.stringify(playersModel))
+        console.log("init complete")
     }
     Component.onCompleted: doInit()
 }

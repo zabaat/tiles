@@ -3,33 +3,41 @@ import QtQuick.Particles 2.0
 
 ///SPARKLER
 Rectangle {
+    id:tileRect
     anchors.fill: parent
     color: "black"
     property string particleGroup:""
-    property alias decayTimer:decay
-    Behavior on color {ColorAnimation{duration:1000}}
+    property int flip: 0
+    transform: Rotation { origin.x: 25; origin.y: 25; angle: flip}
+//    property alias decayTimer:decay
+    Behavior on color {
+        ColorAnimation{duration:500}
+    }
+
+
+
 
     ParticleSystem {
         width:parent.width+15
         height:parent.width+15
         anchors.centerIn: parent
         ImageParticle {
-//            groups: ["stars"]
-            groups:particleGroup
+            groups: ["stars"]
+//            groups:particleGroup
             anchors.fill: parent
             source: "qrc:///particleresources/star.png"
-            Component.onCompleted: console.log(groups)
+//            Component.onCompleted: console.log(groups)
         }
         Emitter {
             id:emitter
-//            group: "stars"
-            group:particleGroup
-            emitRate: 50
+            group: "stars"
+//            group:particleGroup
+            emitRate: 1
             lifeSpan: 2400
             size: 8
             sizeVariation: 4
             anchors.fill: parent
-            Behavior on emitRate {NumberAnimation{duration:500}}
+//            Behavior on emitRate {NumberAnimation{duration:500}}
         }
     }
 //        Turbulence {
@@ -59,21 +67,21 @@ Rectangle {
 //            }
 
 
-        Timer
-        {
-            id:decay
-            running:true
-            repeat:false
-            interval:100
-            onTriggered: {
-                emitter.emitRate = 0
-//                interval= interval/1.5
-            }
-            onRunningChanged: {
-//                if (!running){emitter.visible=false;emitter.emitRate=20}
-//                else{emitter.visible=true;}
-            }
-        }
+//        Timer
+//        {
+//            id:decay
+//            running:true
+//            repeat:false
+//            interval:100
+//            onTriggered: {
+//                emitter.emitRate = 0
+////                interval= interval/1.5
+//            }
+//            onRunningChanged: {
+////                if (!running){emitter.visible=false;emitter.emitRate=20}
+////                else{emitter.visible=true;}
+//            }
+//        }
 
 
 }

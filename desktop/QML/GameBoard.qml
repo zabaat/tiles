@@ -11,13 +11,10 @@ Item{
     property real tileHeight : root.tileHeight
     property real tileWidth : root.tileWidth
     focus:true
+    property alias pContainer:playerContainer
 
     // TO BE REPLACED
-    property int numPlayers:4
-    property var pName:([ "Brett","Chu","p3","derp"])
-    property var pColor: (["#006600","#660066","#DD66DD","#AF6610"])
     property var octoArray:([])
-    property var playerObj:({pName:"",pColor:"black",pId:0,tilesOwned:0,direction:"stop",position:0,x:0,y:0})
     //
 
     GridView {
@@ -45,17 +42,17 @@ Item{
             id:container
             width:0
             height:0
-            color:"transparent"
+            color:"black"
             border.color : "black"
             border.width : 1
             radius : 1
             property int owner : 0
-            onOwnerChanged:console.log("own",tile.particleGroup)
+            onOwnerChanged:console.log("own",owner)
 
-            Behavior on width        {NumberAnimation{duration:100}}
-            Behavior on height       {NumberAnimation{duration:100}}
-            Behavior on color          {ColorAnimation {duration:1000}}
-            Component.onCompleted: {width=tileWidth;height=tileHeight;}
+            Behavior on width        {NumberAnimation{duration:750}}
+            Behavior on height       {NumberAnimation{duration:750}}
+//            Behavior on color          {ColorAnimation {duration:1000}}
+            Component.onCompleted: {width=tileWidth;height=tileHeight;} //set render height /width
 
            Tile
            {
@@ -63,11 +60,15 @@ Item{
                color:fillColor
                visible: fillColor ==""? false:true
                opacity:.8
-               particleGroup:index
-               decayTimer.running:false
+//               particleGroup:index
+//               decayTimer.running:false
                onColorChanged:
                {
-                   decayTimer.running= true
+
+//                    console.log("Tile color Change",index,fillColor,color)
+//                   var derp1 = appModel.get(index)
+//                   var derp = appModel.get(index).fillColor
+//                    console.log("Tile color Change",index,fillColor,color)
                }
            }
            Image {
@@ -109,7 +110,7 @@ Item{
 
            MouseArea {
                anchors.fill: parent
-               onClicked: {grow.start(); tile.decayTimer.running=true;}
+               onClicked: {grow.start();}
            }
            Timer {
                id:grow
@@ -159,9 +160,7 @@ Item{
         }
     }
 
-
-
-    Rectangle { //timer
+    Rectangle { // game countdown timer
     anchors.top:parent.top
     anchors.right:parent.right
     anchors.rightMargin: 150
@@ -279,93 +278,36 @@ Item{
         }
     }
 
-
-
-
-    function playerLogic(playerObj){
-        //update actual position on map with new coordinates from happy array at the beginning
-        var xy = gridConvert(this.position)
-        if (xy.x) this.x = xy.x
-        if (xy.y) this.y = xy.y
-        var clr = this.color.toString()
-
-        appModel.get(this.position).fillColor =   clr
-
-        if (hasOcto == this.position) {octoGet(this,clr)}
-        if (hasFish == this.position) {        }
-
+    Item
+    {
+        id:playerContainer
     }
 
-    function playerInit(playerObj){
-        //this function runs at the Component.onCompleted stage
-        this.position = Qt.binding(function(){return playersModel.get(this.pId).position})
-        this.x = Qt.binding(function(){return playersModel.get(this.pId).x})
-        this.y = Qt.binding(function(){return playersModel.get(this.pId).y})
-        this.color = Qt.binding(function(){return playersModel.get(this.pId).pColor})
+    Timer
+    {
+        id:playerLoop
+        interval:90
+        repeat:true
+        running:true
+        onTriggered:
+        {
+            var xy,playerPos
+            for (var i=0 ;i <numPlayers;i++)
+            {
+                var derp = playersModel.get(i)
+                playerMove(playersModel.get(i))
+           }
+        }
     }
 
     function octoGet(playerObj,clr){
+        var derp = playerObj
+        var derp2=clr
         appModel.get(playerObj.position).octoEffect = true
         for (var i = 0; i < octoArray.length;i++){
                if (appModel.get(playerObj.position+octoArray[i])){
                    appModel.get(playerObj.position+octoArray[i]).fillColor = clr
                }
-        }
-    }
-
-    Player
-    {
-        id:player1
-        onPositionChanged:
-        {
-            //TODO SERVER
-            playerLogic(this)
-            console.log("player position changed")
-        }
-        Component.onCompleted: {playerInit(this)}
-    }
-
-    Player
-    {
-        id:player2
-        property int pId:1
-        onPositionChanged: {//TODO SERVER
-            playerLogic(this)
-        }
-        Component.onCompleted:
-        {
-            playerInit(this)
-            player2.tilesOwned=Qt.binding(function(){return playersModel.get(1).tilesOwned})
-        }
-    }
-
-    Player
-    {
-        id:player3
-        property int pId:2
-        onPositionChanged:
-        {
-            //TODO SERVER
-            playerLogic(this)
-        }
-        Component.onCompleted:
-        {
-            playerInit(this)
-        }
-    }
-
-    Player
-    {
-        id:player4
-        property int pId:3
-        onPositionChanged:
-        {
-            //TODO SERVER
-            playerLogic(this)
-        }
-        Component.onCompleted:
-        {
-            playerInit(this)
         }
     }
 
@@ -409,10 +351,7 @@ Item{
             }
         }
 
-        function gridConvert(linePos)
-        {
-            return root.gameArray[linePos]
-        }
+
 
         function playerMove(playerObj)
         {
@@ -421,7 +360,18 @@ Item{
             var currentPos = playerObj.position
             var newMovement = checkBounds(playerObj)
             if (newMovement == 0){playerObj.direction="stop"} //stop if you can't move any more
-            else playerObj.position += newMovement
+
+            else
+            {
+                playerObj.position += newMovement
+                var xy = root.gridConvert(playerObj.position)
+                playerObj.x = xy.x
+                playerObj.y = xy.y
+                var clr = playerObj.pColor
+                appModel.get(playerObj.position).fillColor = clr
+                if (hasOcto == playerObj.position) {octoGet(playerObj,clr)}
+                if (hasFish == playerObj.position) {        }
+            }
 
             // tilesOwned changer - changes the count for the tiles that you own
             var newTileObj = appModel.get(playerObj.position)
@@ -489,58 +439,12 @@ Item{
         }
     }
 
-    Timer
-    {
-        id:playerLoop
-        interval:90
-        repeat:true
-        running:true
-        onTriggered:
-        {
-            var xy,playerPos
-            for (var i=0 ;i <numPlayers;i++)
-            {
-                playerMove(playersModel.get(i))
-           }
-        }
-    }
+
 
     function init()
     {
-        octoMapper();
-        var xy = {}
-        for (var i =0; i < numPlayers; i++)
-        {
-            playersModel.append(playerObj) //TODO get this from server perhaps? or init of the thing
-            playersModel.get(i).position = positionMapper(i);
-            playersModel.get(i).pName = pName[i];
-            playersModel.get(i).pColor = pColor[i];
-            playersModel.get(i).pId = i
-            xy = gridConvert(playersModel.get(i).position)
-            playersModel.get(i).x = xy.x
-            playersModel.get(i).y = xy.y
-            console.log("player",JSON.stringify(playersModel.get(i)))
-        }
 
-        console.log("GRID",JSON.stringify(gridConvert(14)))
-
-        function positionMapper(i)
-        {
-            switch(numPlayers)
-            {
-            case 2:
-                if (i==0)return 0
-                else if (i==1)return totalGridLength-1
-                break;
-
-            case 4:
-                if (i==0)return 0
-                else if (i==1)return Math.floor(desiredGridSize -1)
-                else if (i==2)return Math.floor(totalGridLength-desiredGridSize)
-                else if (i==3)return Math.floor(totalGridLength-1)
-                break;
-            }
-        }
+//        console.log("GRID",JSON.stringify(gridConvert(14)))
 
         function octoMapper(){
 //            octoArray = new Array(0)
@@ -563,11 +467,9 @@ Item{
             octoArray.push(dsg+1)
         }
 
-
+        octoMapper();
 
         console.log("board init complete")
     }
-
     Component.onCompleted: init()
 }
-
